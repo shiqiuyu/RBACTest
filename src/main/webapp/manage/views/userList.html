@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="../../static/vue/vue.min.js"></script>
+    <script src="../../static/vue/qs.js"></script>
+    <script src="../../static/vue/axios.min.js"></script>
+    <script src="../../static/element/index.js"></script>
+    <link rel="stylesheet" href="../../static/element/index.css">
+    <link rel="stylesheet" href="../../static/css/index.css">
+</head>
+<body>
+        <div id="div1" align="center">
+            <h1 align="center">用户管理</h1>
+            <el-table
+                    :data="pageInfo.list"
+                    bordel
+                    size="mini"
+
+            >
+                <el-table-column prop="id"  label="编号" algin="center" ></el-table-column>
+                <el-table-column prop="username"  label="登录名" algin="center" ></el-table-column>
+                <el-table-column prop="realname"  label="真实名称" algin="center" ></el-table-column>
+                <el-table-column prop="tel"  label="电话" algin="center" ></el-table-column>
+                <el-table-column prop="createtime"  label="创建时间" algin="center" ></el-table-column>
+                <el-table-column prop="flag"  label="状态" algin="center" ></el-table-column>
+                <el-table-column  label="操作" algin="center" ></el-table-column>
+            </el-table>
+
+        </div>
+
+    <script>
+        var vm =new Vue({
+            el:"#div1",
+            data:{
+                pageInfo:{
+
+                },
+                //分页参数
+                pageParams:{
+                    pageNum:1,
+                    pageSize:5
+                },
+                name:"123"
+            }, methods:{
+                userList:function () {
+                    axios.get("/user/userList?"+Qs.stringify(this.pageParams)).then(function (value) {
+                        this.vm.pageInfo = value.data;
+                    }).catch(function (reason) {
+                        alert("失败")
+                    })
+                }
+            },
+            created:function () {
+                this.userList();
+            }
+        })
+    </script>
+</body>
+</html>

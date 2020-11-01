@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../static/element/index.css">
+    <link rel="stylesheet" href="../../static/css/index.css">
+    <script src="../../static/vue/vue.min.js"></script>
+    <script src="../../static/vue/axios.min.js"></script>
+    <script src="../../static/vue/qs.js"></script>
+    <script src="../../static/element/index.js"></script>
+    <script src="../../static/vue/permission.js"></script>
+</head>
+<body>
+<div id="app">
+    <h1 align="center">资源管理</h1>
+    <!--卡片标签-->
+    <el-card shadow="never">
+        <el-button size="mini" type="primary" v-has="'res:add'" icon="el-icon-plus" @click="doInert">添加资源</el-button>
+    </el-card>
+    <!--资源列表展示-->
+    <el-table
+            :data="resourceList"
+            border
+            row-key="id"
+            :tree-props="{children: 'children'}"
+    >
+        <el-table-column prop="id" label="编号" align="center"></el-table-column>
+        <el-table-column prop="name" label="名称" align="center"></el-table-column>
+        <el-table-column prop="path" label="路径" align="center"></el-table-column>
+        <el-table-column prop="type" label="种类" align="center">
+            <template slot-scope="scope">
+                {{scope.row.type==0?'菜单':'按钮'}}
+            </template>
+        </el-table-column>
+        <el-table-column prop="flag" label="状态" align="center">
+            <template slot-scope="scope">
+                {{scope.row.flag==1?'激活':'停用'}}
+            </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" width="300px">
+            <template slot-scope="scope">
+                <el-button type="primary" icon="el-icon-edit"  v-has="'res:edit'" size="mini" @click="doUpdate(scope.row)">修改</el-button>
+                <el-button v-if="scope.row.flag==1" type="danger"  v-has="'res:delete'" icon="el-icon-delete" size="mini"
+                           @click="deleteResources(scope.row)">删除
+                </el-button>
+                <el-button v-else type="warning" icon="el-icon-s-claim"  v-has="'res:huifu'" size="mini" @click="deleteResources(scope.row)">恢复
+                </el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <!--新增对话框-->
+    <el-dialog
+            title="新增资源"
+            :visible.sync="addDiaLig"
+            width="40%"
+    >
+        <table align="center">
+            <tr>
+                <td>名称:</td>
+                <td>
+                    <el-input v-model="formData.name"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>路径:</td>
+                <td>
+                    <el-input v-model="formData.path"></el-input>
+                </td>
+            </tr>
+
+            <tr>
+                <td>类型:</td>
+                <td>
+                    <el-switch
+                            v-model="formData.type"
+                            active-color="#13ce66"
+                            inactive-color="#ff4949"
+                            :active-value="1"
+                            :inactive-value="0"
+                    >
+                    </el-switch>
+                    {{formData.type==1?'按钮':'菜单'}}
+                </td>
+            </tr>
+
+            <tr>
+            <td>状态:</td>
+            <td>
+                <el-switch
+                        v-model="formData.flag"
+                        active-color="#13ce66"
+                        inactive-color="#ff4949"
+                        :active-value="1"
+                        :inactive-value="0"
+                >
+                </el-switch>
+                {{formData.flag==1?'已激活':'未激活'}}
+            </td>
+        </tr>
+
+            <tr v-if="formData.type==1">
+                <td>所属菜单:</td>
+                <td>
+                    <el-select v-model="formData.pid" placeholder="请选择" style="width: 100%;">
+                        <el-option v-for="r in resourceList" :key="r.id" :value="r.id"  :label="r.name"></el-option>
+                    </el-select>
+                </td>
+            </tr>
+
+        </table>
+
+
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="addDiaLig = false">取 消</el-button>
+            <el-button type="primary" @click="addResource">确 定</el-button>
+        </span>
+    </el-dialog>
+
+    <!--修改对话框-->
+    <el-dialog
+            title="修改资源"
+            :visible.sync="updateDiaLig"
+            width="40%"
+    >
+        <table align="center">
+            <tr>
+                <td>名称:</td>
+                <td>
+                    <el-input v-model="formData.name"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>路径:</td>
+                <td>
+                    <el-input v-model="formData.path"></el-input>
+                </td>
+            </tr>
+
+            <tr>
+                <td>类型:</td>
+                <td>
+                    <el-switch
+                            v-model="formData.type"
+                            active-color="#13ce66"
+                            inactive-color="#ff4949"
+                            :active-value="1"
+                            :inactive-value="0"
+                    >
+                    </el-switch>
+                    {{formData.type==1?'按钮':'菜单'}}
+                </td>
+            </tr>
+
+            <tr>
+                <td>状态:</td>
+                <td>
+                    <el-switch
+                            v-model="formData.flag"
+                            active-color="#13ce66"
+                            inactive-color="#ff4949"
+                            :active-value="1"
+                            :inactive-value="0"
+                    >
+                    </el-switch>
+                    {{formData.flag==1?'已激活':'未激活'}}
+                </td>
+            </tr>
+
+            <tr v-if="formData.type==1">
+                <td>所属菜单:</td>
+                <td>
+                    <el-select v-model="formData.pid" placeholder="请选择" style="width: 100%;">
+                        <el-option v-for="r in resourceList" :key="r.id" :value="r.id"  :label="r.name"></el-option>
+                    </el-select>
+                </td>
+            </tr>
+
+        </table>
+
+
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="clearResources">取 消</el-button>
+            <el-button type="primary" @click="updateResource">确 定</el-button>
+        </span>
+    </el-dialog>
+
+
+</div>
+
+<script>
+    var vm = new Vue({
+        el:"#app",
+        data:{
+            //资源数据
+            resourceList:[],
+            //表单数据
+            formData:{},
+            //添加对话框
+            addDiaLig:false,
+            updateDiaLig:false,
+
+        },
+        methods:{
+            getResourceList:function () {
+                axios.get("/resources/getResource").then(function (value) {
+                    this.vm.resourceList = value.data;
+                    console.log(this.vm.resourceList)
+                }).catch(function (reason) {
+                    alert("访问失败");
+                })
+            },
+            //添加按钮
+            doInert:function () {
+                this.formData={};
+                this.addDiaLig = true;
+            },
+            //添加对话框确定按钮
+            addResource:function () {
+                axios.post("/resources/add",this.formData).then(function (value) {
+                        this.vm.addDiaLig = false;
+                        this.vm.getResourceList();
+                    }
+                ).catch(function (reason) {
+                    alert("添加失败")
+                })
+            },
+            //修改按钮
+            doUpdate:function (row) {
+                this.formData = row;
+                this.updateDiaLig = true;
+            },
+            //修改对话框确定按钮
+            updateResource:function () {
+                axios.post("/resources/update",this.formData).then(function (value) {
+                        this.vm.updateDiaLig = false;
+                        this.vm.getResourceList();
+                    }
+                ).catch(function (reason) {
+                    alert("修改失败")
+                })
+            },
+            //修改对话框取消按钮
+            clearResources:function () {
+                this.getResourceList();
+            },
+            //删除/恢复按钮
+            deleteResources:function (row) {
+                this.formData = row;
+                axios.post("/resources/deleteResources",this.formData).then(function (value) {
+                        this.vm.getResourceList();
+                    }
+                ).catch(function (reason) {
+                    alert("修改失败")
+                })
+
+            }
+        },
+
+        created:function () {
+            this.getResourceList();
+
+        }
+    });
+</script>
+</body>
+</html>

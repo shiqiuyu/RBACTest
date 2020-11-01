@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <style>
+        .login_container {
+            height: 100%;
+            background: #2b4b6b;
+        }
+        .login_box {
+            width: 450px;
+            height: 300px;
+            background: #fff;
+            border-radius: 3px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .avatar_box {
+            padding: 10px;
+            width: 130px;
+            height: 130px;
+            border: 1px solid #eee;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ddd;
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+        }
+        img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #eee;
+        }
+
+        .login_form {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        .btns {
+            display: flex;
+            justify-content: flex-end;
+        }
+    </style>
+    <link rel="stylesheet" href="static/element/index.css">
+    <link rel="stylesheet" href="static/css/index.css">
+
+</head>
+<body class="login_container">
+    <div id="app">
+        <div class="login_box">
+            <!--头像区域-->
+            <div class="avatar_box">
+                <img src="static/images/vue-logo.png" alt />
+            </div>
+            <!--表单区域-->
+            <el-form ref="loginFormRef" :model="loginForm" :rules="loginFormRules" label-width="0px" class="login_form">
+                <el-form-item prop="username">
+                    <el-input prefix-icon="el-icon-user-solid" v-model="loginForm.username" placeholder="请输入登录账号"></el-input>
+                </el-form-item>
+                <el-form-item prop="password">
+                    <el-input prefix-icon="el-icon-s-goods" v-model="loginForm.password"  placeholder="请输入登录密码" show-password></el-input>
+                </el-form-item>
+                <el-form-item class="btns">
+                    <el-button type="primary"  @click="submitLogin">登录</el-button>
+                    <el-button type="info"  @click="resetLoginForm">重置</el-button>
+                </el-form-item>
+            </el-form>
+        </div>
+    </div>
+
+
+<script src="static/vue/vue.min.js"></script>
+<script src="static/vue/axios.min.js"></script>
+<script src="static/element/index.js"></script>
+<script >
+    var vm = new Vue({
+        el:"#app",
+        data:{
+            // 登录表单的数据绑定对象
+            loginForm: {
+                username: '',
+                password: ''
+            },
+            // 表单的验证规则对象
+            loginFormRules: {
+                username: [
+                    { required: true, message: '请输入登录名称', trigger: 'blur' },
+                    { min: 4, max: 15, message: '长度在 4 到 15 个字符', trigger: 'blur' }
+                ],
+                password: [
+                    { required: true, message: '请输入登录密码', trigger: 'blur' },
+                    { min: 6, max: 15, message: '长度在 6 到 15 个字符', trigger: 'blur' }
+                ]
+            }
+        },
+        methods:{
+            // 点击登录按钮
+            submitLogin:function() {
+                this.$refs.loginFormRef.validate(function(valid){
+                    console.log(valid);
+                    console.log(this);
+                    if(valid){
+                        //this.vm.$message.success('验证通过，ajax提交登录');
+                        //ajax提交表单
+                        axios.post("/user/login",this.vm.loginForm).then(function (value) {
+                            //后台处理没有语法错误   响应结果状态200
+                            //登录结果（1）成功    （2）失败
+                           if(value.data.status==0){ //登录失败
+                               this.vm.$message.error(value.data.message);
+                           }else{//登录成功
+                              this.vm.$message.success(value.data.message);
+                              //将user存入会话session
+                               sessionStorage.setItem("user",JSON.stringify(value.data.user))
+                               //将菜单资源存入
+                               sessionStorage.setItem("menuList",JSON.stringify(value.data.menuList))
+                               //按钮资源存入
+                               sessionStorage.setItem("butList",JSON.stringify(value.data.butList))
+                              //跳转到管理首页面
+                               location.href="/manage/index.html";
+                           }
+                        }).catch(function (reason) {
+                            //后台处理发生异常  响应结果状态不是2xx
+                            this.vm.$message.error('登录请求处理失败');
+                        });
+
+                    }else {
+                        this.vm.$message.error('验证不通过，不能提交登录');
+                    }
+                })
+            },
+            // 点击重置按钮 重置表单
+            resetLoginForm:function() {
+                this.$refs.loginFormRef.resetFields();
+            }
+        }
+    });
+
+</script>
+</body>
+</html>

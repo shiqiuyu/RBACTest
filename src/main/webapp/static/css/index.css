@@ -1,0 +1,98 @@
+* {
+    padding: 0px;
+    margin: 0px;
+}
+.index-box {
+    font-family: 'Avenir', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    height: 100%;
+}
+.index-box .el-container {
+    height: 100%;
+}
+.index-box .el-main {
+    height: 100%;
+}
+.index-box .el-aside {
+    background-color: #20222A;
+    height: 100vh;
+    min-height: 100%;
+    max-width: 200px;
+}
+.index-box .el-aside .logo {
+    background-color: #20222A;
+    color: rgba(255,255,255,.8);
+    text-align: center;
+    height: 60px;
+    padding-top: 16px;
+    font-size: 16px;
+    box-sizing: border-box;
+    border-bottom: 1px solid gray;
+}
+.index-box .el-header {
+    border-bottom: 1px solid #f6f6f6;
+    box-sizing: border-box;
+    background-color: #fff;
+    line-height: 60px;
+}
+
+.el-menu {
+    border: none;
+}
+.index-box .menu-nav:not(.el-menu--collapse) {
+    width: 200px;
+    min-height: 400px;
+}
+.btn-tool {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    padding: 5px 10px;
+    cursor: pointer;
+    outline: none;
+    text-align: left;
+}
+.user-name {
+    margin-left: 20px;
+}
+
+.main-box {
+    display: -webkit-box; /* 老版本语法: Safari, iOS, Android browser, older WebKit browsers. */
+    display: -moz-box; /* 老版本语法: Firefox (buggy) */
+    display: -ms-flexbox; /* 混合版本语法: IE 10 */
+    display: -webkit-flex; /* 新版本语法: Chrome 21+ */
+    display: flex; /* 新版本语法: Opera 12.1, Firefox 22+ */
+}
+
+.main-flex-grow {
+    -webkit-box-flex: 3.0;
+    -moz-flex-grow: 3;
+    -webkit-flex-grow: 3;
+    flex-grow: 3;
+    overflow-y: scroll;
+}
+
+.menu-link {
+    color: rgba(255,255,255,.8);
+    text-decoration: none;
+}
+
+.el-menu-item.is-active {
+    background-color: rgba(8, 72, 193, 0.54) !important;
+}
+
+.el-menu-item.is-active a {
+    color:rgb(255, 208, 75)!important ;
+}
+
+.el-dropdown-link {
+    cursor: pointer;
+    color: #409EFF;
+}
+.el-icon-arrow-down {
+    font-size: 20px;
+}
+.index-box  .header-box  .project-title{
+    font-size: x-large;
+}

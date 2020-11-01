@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>后台管理</title>
+    <link rel="stylesheet" href="../static/element/index.css">
+    <link rel="stylesheet" href="../static/css/index.css">
+
+</head>
+<body>
+<div id="app">
+    <el-container class="index-box">
+        <el-aside width="asideWidth">
+            <div class="logo">
+                <img v-show="!isCollapse" src="../static/images/logo.png"
+                     alt="ELementUI" width="122" height="27">
+            </div>
+            <el-menu
+                    class="menu-nav"
+                    background-color="#20222A"
+                    text-color="rgba(255,255,255,.8)"
+                    active-text-color="#ffd04b"
+                    :collapse="isCollapse">
+                <el-submenu>
+                    <template slot="title">
+                        <i class="el-icon-menu"></i>
+                        <span>系统管理</span>
+                    </template>
+
+                    <el-menu-item :index="index" v-for="(item,index) in menuItems">
+                            <a class="menu-link" target="mainFrame" :href="item.path" @click="menuItemChange(item.name)">
+                                <i class="el-icon-bank-card"></i>
+                                <span slot="title">{{item.name}}</span>
+                            </a>
+                    </el-menu-item>
+
+                </el-submenu>
+            </el-menu>
+        </el-aside>
+        <el-container>
+            <el-header>
+                <div class="header-box">
+                    <el-row type="flex" justify="space-between">
+                       <el-col :span="12">
+                                   <i class="el-icon-d-arrow-left" v-show="!isCollapse" @click="collapse"></i>
+                                   <i class="el-icon-d-arrow-right" v-show="isCollapse" @click="collapse"></i>
+
+                                    &nbsp;&nbsp;<i class="el-icon-refresh" @click="refresh"></i>
+
+                           <!--路径导航-->
+                                    &nbsp;&nbsp;系统管理&nbsp;&nbsp;>>&nbsp;&nbsp;{{menuItemName}}
+                       </el-col>
+                        <el-col :span="6" align="right" style="padding-right: 30px">
+                            <el-dropdown trigger="hover" show-timeout="100">
+                               <span class="el-dropdown-link">
+                                欢迎,{{user.realname}}<i class="el-icon-arrow-down el-icon--right"></i>
+                               </span>
+                                <el-dropdown-menu slot="dropdown">
+                                    <el-dropdown-item command="profile" disabled>个人资料</el-dropdown-item>
+                                    <el-dropdown-item command="updatepwd" disabled>修改密码</el-dropdown-item>
+                                    <el-dropdown-item command="logout"  divided>退出登录</el-dropdown-item>
+                                </el-dropdown-menu>
+                            </el-dropdown>
+                        </el-col>
+                    </el-row>
+                </div>
+            </el-header>
+            <el-main class="main-box" :style="{height:mainHeight}">
+                 <iframe  name="mainFrame" scrolling="yes" width="100%" :height="{height:mainHeight}" frameborder="0"></iframe>
+            </el-main>
+        </el-container>
+    </el-container>
+</div>
+<script src="../static/vue/vue.min.js"></script>
+<script src="../static/vue/axios.min.js"></script>
+<script src="../static/vue/qs.js"></script>
+<script src="../static/element/index.js"></script>
+
+<script>
+    var vm = new Vue({
+        el:"#app",
+        data:{
+            user:{
+                realname:"请登录"
+            },
+            mainHeight:"",//内容的宽度
+            isCollapse:false,// 折叠和展示侧边栏
+            headerHeight: 60, // 头的高度
+            //访问菜单项
+            menuItemName:"首页",
+            //菜单项数据
+            menuItems:[
+                {
+                    id:1,
+                    name:"用户管理",
+                    path:"views/user.html"
+                },{
+                    id:2,
+                    name:"角色管理",
+                    path:"views/role.html"
+                },{
+                    id:3,
+                    name:"资源管理",
+                    path:"views/res.html"
+                }
+            ]
+        },
+        methods:{
+            // 关闭和展示侧边栏
+            collapse:function() {
+                this.isCollapse = !this.isCollapse;
+            },
+            // 刷新页面
+            refresh:function() {
+                location.reload()
+            },
+            //菜单点击事件
+            menuItemChange:function (menuItemName) {
+               this.menuItemName = menuItemName;
+            },
+            //获取菜单项
+            getMenuItems:function () {
+
+            }
+
+        },
+        computed:{
+            asideWidth:function() {// 侧边栏的宽度计算
+                return this.isCollapse ? 'auto' : '200px'
+            },
+
+        },
+        mounted:function () {
+            // 计算主页的高度
+            this.mainHeight = window.innerHeight - this.headerHeight + "px";
+        },
+        created:function () {
+            var str =  sessionStorage.getItem("user");
+            if(str){
+                this.user = JSON.parse(str);
+                //获取菜单项
+
+                    var menuList = sessionStorage.getItem("menuList");
+                    this.menuItems = JSON.parse(menuList);
+
+            } else {
+                location = "/login.html";
+            }
+
+
+        }
+    });
+
+
+
+</script>
+</body>
+</html>

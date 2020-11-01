@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../../static/element/index.css">
+    <link rel="stylesheet" href="../../static/css/index.css">
+    <script src="../../static/vue/vue.min.js"></script>
+    <script src="../../static/vue/axios.min.js"></script>
+    <script src="../../static/vue/qs.js"></script>
+    <script src="../../static/element/index.js"></script>
+    <script src="../../static/vue/permission.js"></script>
+
+</head>
+<body>
+<div id="app">
+    <h1 align="center">角色管理</h1>
+    <!--卡片标签-->
+    <el-card shadow="never">
+        <el-button size="mini" type="primary" v-has="'role:add'" icon="el-icon-plus" @click="doInsert">添加角色</el-button>
+    </el-card>
+    <el-table
+            :data="roleList"
+            border
+    >
+        <el-table-column prop="id" label="编号" align="center"></el-table-column>
+        <el-table-column prop="name" label="名称" align="center"></el-table-column>
+        <el-table-column prop="flag" label="状态" align="center">
+            <template slot-scope="scope">
+                {{scope.row.flag==1?'激活':'停用'}}
+            </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" width="300px">
+            <template slot-scope="scope">
+                <el-button type="primary" icon="el-icon-edit" size="mini"  v-has="'role:edit'" @click="updateResource(scope.row)">修改</el-button>
+                <el-button type="success" icon="el-icon-user" size="mini"  v-has="'role:resources'" @click="doResource(scope.row)">分配资源</el-button>
+                <el-button v-if="scope.row.flag==1" type="danger" icon="el-icon-delete" size="mini"
+                           @click="deleteRole(scope.row)"  v-has="'role:delete'" >删除
+                </el-button>
+                <el-button v-else type="warning" icon="el-icon-s-claim" v-has="'role:huifu'" size="mini" @click="deleteRole(scope.row)">恢复
+                </el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+
+    <!--分配资源对话框-->
+    <el-dialog
+            center
+            title="分配资源"
+            :visible.sync="updateResourceDiaLig"
+            width="40%"
+    >
+        <!--资源树-->
+        <el-tree
+                ref="resTree"
+                :data="resourceList"
+                :props="defaultProps"
+                node-key="id"
+                default-expand-all
+                show-checkbox
+                check-strictly
+        >
+        </el-tree>
+
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="">取 消</el-button>
+            <el-button type="primary" @click="updateTree">确 定</el-button>
+        </span>
+    </el-dialog>
+
+    <!--新增对话框-->
+    <el-dialog
+            title="新增角色"
+            :visible.sync="addDiaLig"
+            width="40%"
+    >
+        <table align="center">
+            <tr>
+                <td>名称:</td>
+                <td>
+                    <el-input v-model="formData.name"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>状态:</td>
+                <td>
+                    <el-switch
+                            v-model="formData.flag"
+                            active-color="#13ce66"
+                            inactive-color="#ff4949"
+                            :active-value="1"
+                            :inactive-value="0"
+                    >
+                    </el-switch>
+                    {{formData.flag==1?'已激活':'未激活'}}
+                </td>
+            </tr>
+        </table>
+
+
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="addDiaLig = false">取 消</el-button>
+            <el-button type="primary" @click="addRole">确 定</el-button>
+        </span>
+    </el-dialog>
+
+    <!--修改角色-->
+    <el-dialog
+            title="修改角色"
+            :visible.sync="updateDiaLig"
+            width="40%"
+    >
+        <table align="center">
+            <tr>
+                <td>名称:</td>
+                <td>
+                    <el-input v-model="formData.name"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>状态:</td>
+                <td>
+                    <el-switch
+                            v-model="formData.flag"
+                            active-color="#13ce66"
+                            inactive-color="#ff4949"
+                            :active-value="1"
+                            :inactive-value="0"
+                    >
+                    </el-switch>
+                    {{formData.flag==1?'已激活':'未激活'}}
+                </td>
+            </tr>
+        </table>
+
+
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="clearRole">取 消</el-button>
+            <el-button type="primary" @click="updateRole">确 定</el-button>
+        </span>
+    </el-dialog>
+</div>
+<script>
+    var vm = new Vue({
+        el:"#app",
+        data:{
+            //所有资源
+            roleList:[],
+            //分配资源对话框
+            updateResourceDiaLig:false,
+            //树属性配置
+            defaultProps:{
+                label:"name",
+                children:"children"
+            },
+            //资源树数据
+            resourceList:[],
+            //formData
+            formData:{
+
+            },
+            //新增角色
+            addDiaLig:false,
+            //修改角色
+            updateDiaLig:false,
+            //分配角色对象
+            role:{}
+        },
+        methods:{
+            getRoleList:function () {
+                axios.get("/role/roleList").then(function (value) {
+                    this.vm.roleList = value.data;
+                }).catch(function (reason) {
+                })
+            },
+            //分配资源对话框
+            doResource:function (row) {
+                this.updateResourceDiaLig=true;
+                this.role = row;
+                //二次点击
+                this.$nextTick(function () {
+                    //this vue对象
+                    console.log(this); // vue对象
+                    console.log(this.$refs);
+                    console.log(this.$refs.resTree);
+                })
+                //根据角色id回显资源
+                axios.get("/role/getRoleResource?roleId="+row.id).then(function (value) {
+
+                    this.vm.$refs.resTree.setCheckedKeys(value.data);
+
+                }).catch(function (reason) {
+
+                })
+            },
+            //初始化资源树
+            initResourceTree:function () {
+                axios.get("/role/getAllResource").then(function (value) {
+                    this.vm.resourceList = value.data;
+                }).catch(function (reason) {
+                    alert("初始化tree失败")
+                })
+            },
+            //新增管理
+            doInsert:function () {
+                this.addDiaLig = true;
+                this.formData = {};
+            },
+            //新增管理确定按钮
+            addRole:function () {
+                axios.post("/role/addRole",this.formData).then(function (value) {
+                        this.vm.addDiaLig=false;
+                        this.vm.getRoleList();
+                }).catch(function (reason) {
+
+                })
+            },
+            //修改角色按钮
+            updateResource:function (row) {
+                this.formData = row;
+                this.updateDiaLig = true;
+            },
+            //修改确定按钮
+            updateRole:function(){
+                axios.post("/role/updateRole",this.formData).then(function (value) {
+                    this.vm.updateDiaLig=false;
+                    this.vm.getRoleList();
+                }).catch(function (reason) {
+
+                })
+            },
+            //修改取消按钮
+            clearRole:function () {
+                this.updateDiaLig=false;
+                this.getRoleList();
+            },
+            //删除按钮
+            deleteRole:function (row) {
+                this.formData = row;
+                axios.post("/role/deleteRole",this.formData).then(function (value) {
+                    this.vm.getRoleList();
+                }).catch(function (reason) {
+
+                })
+            },
+            //修改资源树
+            updateTree:function () {
+                console.log(this.$refs.resTree.getCheckedKeys())
+                console.log(this.role)
+
+                axios.post("/role/updateResourcesByRoleID",{
+                    roleId:this.role.id,
+                    resourcesID:this.$refs.resTree.getCheckedKeys()
+                }).then(function (value) {
+                    this.vm.updateResourceDiaLig=false;
+                    this.vm.getRoleList();
+                }).catch(function (reason) {
+
+                })
+
+            }
+
+
+        },
+        created:function () {
+            this.getRoleList();
+            this.initResourceTree();
+    }
+    })
+
+</script>
+</body>
+</html>

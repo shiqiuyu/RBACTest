@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link rel="stylesheet" href="../../static/element/index.css">
+    <link rel="stylesheet" href="../../static/css/index.css">
+</head>
+<body>
+<div id="app">
+    <h1 align="center">用户管理</h1>
+    <!--卡片标签-->
+    <el-card shadow="never">
+        <el-button size="mini" type="primary" icon="el-icon-plus"  v-has="'user:add'" @click="doInsert">添加员工</el-button>
+    </el-card>
+    <el-table
+            :data="pageInfo.list"
+
+            border
+    >
+        <el-table-column prop="id" label="编号" align="center"></el-table-column>
+        <el-table-column prop="username" label="登录名" align="center"></el-table-column>
+        <el-table-column prop="realname" label="真实名称" align="center"></el-table-column>
+        <el-table-column prop="tel" label="电话" align="center"></el-table-column>
+        <el-table-column prop="createtime" label="创建时间" align="center"></el-table-column>
+        <el-table-column prop="flag" label="状态" align="center">
+            <template slot-scope="scope">
+                {{scope.row.flag==1?'激活':'停用'}}
+            </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" width="300px">
+            <template slot-scope="scope">
+                <el-button type="primary" icon="el-icon-edit" size="mini" v-has="'user:edit'" @click="doUpdate(scope.row)">修改</el-button>
+                <el-button type="success" icon="el-icon-user" size="mini" v-has="'user:role'" @click="doRole(scope.row)">分配角色</el-button>
+                <el-button v-if="scope.row.flag==1" type="danger" icon="el-icon-delete" size="mini"
+                           @click="updateFlag(scope.row)"  v-has="'user:delete'">删除
+                </el-button>
+                <el-button v-else type="warning" icon="el-icon-s-claim" v-has="'user:huifu'" size="mini" @click="updateFlag(scope.row)">恢复
+                </el-button>
+            </template>
+        </el-table-column>
+    </el-table>
+    <!--:hide-on-single-page="true" 分页只有一页时候隐藏-->
+    <el-pagination
+            background
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :page-sizes="[5, 10, 15, 20]"
+            :current-page="pageParams.pageNum"
+            :page-size="pageParams.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pageInfo.total">
+    </el-pagination>
+    <!--新增对话框-->
+    <el-dialog
+            center
+            title="新增用户"
+            :visible.sync="addDiaLig"
+            width="40%"
+    >
+        <table align="center">
+            <tr>
+                <td>登录账户:</td>
+                <td>
+                    <el-input v-model="formData.username"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>真实名称:</td>
+                <td>
+                    <el-input v-model="formData.realname"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>联系电话:</td>
+                <td>
+                    <el-input v-model="formData.tel"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>用户状态:</td>
+                <td>
+                    <el-switch
+                            v-model="formData.flag"
+                            active-color="#13ce66"
+                            inactive-color="#ff4949"
+                            active-value="1"
+                            inactive-value="0"
+                    >
+                    </el-switch>
+                    {{formData.flag==1?'已激活':'未激活'}}
+                </td>
+            </tr>
+        </table>
+
+
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="addDiaLig = false">取 消</el-button>
+            <el-button type="primary" @click="addUser">确 定</el-button>
+        </span>
+    </el-dialog>
+
+    <!--修改对话框-->
+    <el-dialog
+            center
+            title="修改用户"
+            :visible.sync="updateDiaLig"
+            width="40%"
+    >
+        <table align="center">
+            <tr>
+                <td>登录账户:</td>
+                <td>
+                    <el-input v-model="formData.username"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>真实名称:</td>
+                <td>
+                    <el-input v-model="formData.realname"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>联系电话:</td>
+                <td>
+                    <el-input v-model="formData.tel"></el-input>
+                </td>
+            </tr>
+            <tr>
+                <td>用户状态:</td>
+                <td>
+                    <el-switch
+                            v-model="formData.flag"
+                            active-color="#13ce66"
+                            inactive-color="#ff4949"
+                            :active-value="1"
+                            :inactive-value="0"
+
+                    >
+                    </el-switch>
+                    {{formData.flag==1?'已激活':'未激活'}}
+                </td>
+            </tr>
+        </table>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="updateClear(formData.id)">取 消</el-button>
+            <el-button type="primary" @click="updateUser">确 定</el-button>
+        </span>
+    </el-dialog>
+
+    <!--角色分配对话框-->
+    <el-dialog
+            center
+            title="分配角色"
+            :visible.sync="updateRole"
+            width="40%"
+    >
+        <el-checkbox-group v-model="checkList">
+            <el-checkbox v-for="role in roleList" :label="role.id">{{role.name}}</el-checkbox>
+        </el-checkbox-group>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="updateRole=false">取 消</el-button>
+            <el-button type="primary" @click="doUpdateRole">确 定</el-button>
+        </span>
+    </el-dialog>
+
+</div>
+<script src="../../static/vue/vue.min.js"></script>
+<script src="../../static/vue/qs.js"></script>
+<script src="../../static/vue/axios.min.js"></script>
+<script src="../../static/element/index.js"></script>
+<script src="../../static/vue/permission.js"></script>
+
+<script>
+    var vm = new Vue({
+        el: "#app",
+        data: {
+            pageInfo: {},
+            //分页参数
+            pageParams: {
+                pageNum: 1,
+                pageSize: 5
+            },
+            //dialog对话框
+            addDiaLig: false,
+            updateDiaLig: false,
+            updateRole: false,
+            //表单数据
+            formData: {},
+            //多选框数组--选中的角色
+            checkList: [],
+            //所有角色
+            roleList: [],
+            user: {}
+        },
+        methods: {
+            userList: function (pageNum) {
+                this.pageParams.pageNum = pageNum;
+                axios.get("/user/userList?" + Qs.stringify(this.pageParams)).then(function (value) {
+                    this.vm.pageInfo = value.data;
+                }).catch(function (reason) {
+                    alert("失败")
+                })
+            },
+            //每页条数更改
+            handleSizeChange: function (pageSize) {
+                this.pageParams.pageSize = pageSize;
+                this.userList(1);
+            },
+            //当前页码改变
+            handleCurrentChange: function (pageNum) {
+                this.uthis.formData = {};serList(pageNum);
+            },
+            //添加员工按钮
+            doInsert: function () {
+                this.addDiaLig = true;
+                this.formData = {};
+            },
+            //对话框确定按钮
+            addUser: function () {
+                axios.post("/user/add", this.formData).then(function (value) {
+                    this.vm.userList(1);
+                    this.vm.addDiaLig = false;
+                }).catch(function (reason) {
+                    alert("新增失败");
+                })
+            },
+            //修改按钮
+            doUpdate: function (row) {
+                this.formData = row;
+                this.updateDiaLig = true;
+
+            },
+            //修改对话框确定按钮
+            updateUser: function () {
+                axios.post("/user/update", this.formData).then(function (value) {
+
+                    this.vm.updateDiaLig = false;
+                    this.vm.userList(1);
+                }).catch(function (reason) {
+                    alert("修改失败");
+                })
+            },
+            //修改对话框取消按钮
+            updateClear: function (id) {
+                axios.get("/user/selectById?id=" + id).then(function (value) {
+                    this.vm.formData = value.data;
+                    this.vm.updateDiaLig = false;
+                    this.vm.userList(1);
+                }).catch(function (reason) {
+
+                })
+            },
+            //删除/恢复按钮
+            updateFlag: function (row) {
+                this.formData = row;
+                axios.post("/user/updateFlag", this.formData).then(function (value) {
+                    this.vm.userList(1);
+                }).catch(function (reason) {
+                    alert("修改/恢复失败")
+                })
+
+            },
+            //分配角色按钮
+            doRole: function (row) {
+                this.user = row;
+                axios.get("/user/getRole?id=" + row.id).then(function (value) {
+                    this.vm.roleList = value.data.roleList;
+                    this.vm.checkList = value.data.UIDList;
+                    this.vm.updateRole = true;
+
+                }).catch(function (reason) {
+                })
+            },
+            //根据UserID修改角色对话框确定按钮
+            doUpdateRole:function () {
+                axios.post("/user/updateRoleByUid",{
+                    uid :this.user.id ,
+                    roleID :this.checkList
+                }).then(function (value) {
+                    this.vm.updateRole = false;
+                    this.vm.userList(1);
+                }).catch(function (reason) {
+                    alert("修改失败")
+                })
+            }
+        },
+        created: function () {
+            this.userList(1);
+        }
+    });
+
+
+</script>
+</body>
+</html>
